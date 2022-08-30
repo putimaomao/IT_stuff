@@ -1,1 +1,44 @@
+#Add a user to the hurley group for shared access
+groups <user>		#shows current group assignment of <user>
+sudo adduser --uid xxx <user>
+sudo usermod <user> -g hurley
 
+#delete user
+sudo deluser –remove-home <user>
+
+#change folder group and allow users in the same group to read/write/execute
+sudo chgrp -R hurley /mount/local_ssd		#changes group
+sudo chmod -R g+rwx /mount/local_ssd		#changes permissions
+sudo chown user:group <target folder>		#changes ownership
+
+#IP block
+sudo fail2ban-client status sshd			#show all banned IPs
+sudo fail2ban-client set sshd unbanip <IP>	#unban an IP
+
+#passwordless setup on the local machine
+ssh-keygen -t dsa
+ssh-keygen -t rsa
+
+#add them to the authorized_keys file on the remote device
+cat ~/.ssh/*.pub | ssh user@remote-system 'cat>>.ssh/authorized_keys'
+
+#then passwordless should be set up; needs to be done for each remote system you want to have passwordless separately
+
+*set stringent permission on the local machine
+chmod 700 ~/.ssh			#Folder only read/write permission for user
+chmod 600 ~/.ssh/*			#Files only read/write permission for user
+
+#Ubuntu updates can break the graphics drivers after the reboot, check remotely with:
+nvidia-smi
+
+#If nothing is detected; users won’t be able to login at the workstation; only remote login works! If that happens, login remotely and re-install the nvidia drivers
+cd nvidia
+sudo ./install_nvidia_drivers.sh
+
+#Hercules (bay3, window) is especially weird in terms of nividia drivers. Usually it won’t let you re-install the driver due to some background process running. You will get an error message during re-installation. To fix this, check the log file of the installation process:
+cat /var/log/nvidia-installer.log
+
+#Find the process number noted in the log file preventing the reinstallation and kill the process with:
+sudo kill -9 <process number>
+
+#redo the usual re-installation; should work now.
